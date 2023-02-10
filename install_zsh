@@ -1,0 +1,5 @@
+#!/bin/bash
+
+dnf -y ruby zsh
+gem install YkLib
+

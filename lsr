@@ -1,0 +1,229 @@
+#!/usr/bin/env ruby
+
+$nolist = []
+$allList = []
+
+def rec (d)
+	cnt = 0
+	Dir.foreach d do |f|
+		if f == "." || f == ".."
+			next
+		end
+		if d == "/"
+			f = "/" + f
+		else
+			f = d + "/" + f
+		end
+		if ($linkOK == nil) && File.symlink?(f)
+			$allList.push f + "\0"
+			cnt += 1
+			next
+		end
+		if File.directory?(f)
+			if $dir
+				$allList.push f + "/" + "\0"
+			end
+		else	
+			cnt += 1
+			$allList.push f + "\0"
+		end
+		if File.directory?(f) && !$nolist.include?(f)
+			if (tmp = rec(f)) == 0 && !$dir
+				$allList.push f + "/" + "\0"
+				cnt += 1
+			else
+				cnt += tmp
+			end
+		end
+	end
+	cnt
+end
+
+
+require 'Yk/misc_tz'
+
+ARGS = CommandLine.new(
+	%w[
+		[l]ink
+		c
+		(?)help
+		[a]ll
+		author
+		(b)escape
+		[B]ignore-backups
+		C
+		color=never
+		color=always
+		color=auto
+		[d]irectory
+		(D)dired
+		f
+		(F)classify
+		file-type
+		full-time
+		g
+		(G)no-group
+		(h)uman-readable
+		si
+		(H)dereference-command-line
+		dereference-command-line-symlink-to-dir
+		[i]node
+		(I)ignore
+		k
+		L
+		m
+		[n]umeric-uid-gid
+		[N]literal
+		o
+		(q)hide-controol-chars
+		show-control-chars
+		(Q)quote-name
+		[r]everse
+		(R)recursive
+		[s]ize
+		S
+		t
+		u
+		U
+		v
+		x
+		X
+		1
+		lcontext
+		(Z)context
+		scontext
+		version
+	],
+	%w[
+		block-size
+		format
+		hide
+		(p)indicator-style
+		quoting-style
+		sort
+		time
+		time-style
+		(T)tabsize
+		[w]idth
+		nolist
+		[P]revious
+		[A]fter
+	]
+)
+
+
+#ARGV.each__ do |g|
+#	case +g
+#	when /^\-/
+#		case $'
+#		when 'l'
+#			$linkOK = true
+#		when 'c'
+#		end
+#	when '-c'
+#		$curPath = true
+#	end
+#	if ARGV[i] == '-d'
+ #       ARGV.delete_at(i)
+  #      $dir = true
+#        retry
+#	end
+#end
+
+ARGS['-c'] > 0 and $curPath = true
+ARGS['-d'] > 0 and $dir = true
+ARGS['-L'] > 0 and $forceLong = true
+$previous = ARGS['-P']
+$after = ARGS['-A']
+
+UTable = {
+	"Y" => 3600 * 24 * 365,
+	"M" => 3600 * 24 * 30,
+	"D" => 3600 * 24,
+	"h" => 3600,
+	"m" => 60,
+	"s" => 1
+}
+
+def convDur f, s
+	Time.now - UTable[s] * f
+end
+
+if $previous && $previous[-1] && ($previous[-1] =~ /^(\d+(\.\d+|))([YMDhms])$/)
+	$previous = convDur $1.to_f, $3
+end
+
+if $after && $after[-1] && ($after[-1] =~ /^(\d+(\.\d+|))([YMDhms])$/)
+	$after = convDur $1.to_f, $3
+end
+
+(ARGS['nolist'] || []).each do |e|
+	$nolist.push File.expand_path(e)
+end
+
+ARGS.deleteOpt '-P'
+ARGS.deleteOpt '-A'
+ARGS.deleteOpt '-c'
+ARGS.deleteOpt '-d'
+ARGS.deleteOpt '-L'
+ARGS.deleteOpt '--nolist'
+opts = ARGS.all_options.join(' ')
+
+if STDOUT.tty?
+	$curPath = true
+	$tty = true
+end
+
+require 'Yk/file_aux'
+require 'Yk/shellquote'
+
+arg = File.expand_path(ARGS[0] || ".")
+
+
+if !ARGS['?']
+#	if $linkOK == nil && (File.symlink?(arg) || !File.directory?(arg))
+#		$allList.push(arg + "\n")
+#	else
+		rec(arg = File.resolv_link(arg))
+#	end
+	$allList.sort!
+	if $previous && $previous.is_a?(Time)
+		nList = []
+		$allList.each do |e|
+			if File.exist?(e.chop)
+				if File.mtime(e.chop) <= $previous
+					nList.push e
+				end
+			end
+		end
+		$allList = nList
+	end
+	if $after && $after.is_a?(Time)
+		nList = []
+		$allList.each do |e|
+			if File.exist?(e.chop)
+				if File.mtime(e.chop) >= $after
+					nList.push e
+				end
+			end
+		end
+		$allList = nList
+	end
+	$allList.map! do |e|
+		$curPath ? e[arg.size + 1 .. -1] : e
+	end
+	if $tty || opts != "" || $forceLong
+		IO.popen "cd #{arg};xargs -0 ls #{opts} #{$tty && '--color'} #{($forceLong || $tty) ? '-lad' : '-ad'} --time-style=+'%y-%m-%d %H:%M:%S'", "w" do |fw|
+			$allList.each do |e|
+				fw.write e
+			end
+		end
+	else
+		$allList.each do |e|
+			print e.chop + "\n"
+		end
+	end	
+else
+	STDERR.write "usage: lsr [-l] [-c] DIR [--nolist DIR1 DIR2 ...]\n"
+end
+
