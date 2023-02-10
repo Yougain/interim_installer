@@ -1,5 +1,6 @@
 #!/bin/bash
 
-dnf -y ruby zsh
-gem install YkLib
+dnf -y ruby zsh make gcc ruby-devel
+gem install YkLib git
+git clone  https://github.com/Yougain/interim_installer.git
 
