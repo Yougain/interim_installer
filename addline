@@ -1,0 +1,365 @@
+#!/usr/bin/env ruby
+
+
+modify_pkg = false
+lineNum = 0
+content = ""
+revExec = false
+revArgv = []
+newArgv = []
+stdArgv = []
+regexpList = []
+target = nil
+fileMod = nil
+
+if false
+	class Object
+		class Generator_
+			def inc
+				cc = nil
+				if callcc { |cc| true }
+					@nxtCC = cc
+					@cc.call false
+				else
+					@nxtCC = nil
+				end
+				self
+			end
+			def next?
+				!@nextIsEnd
+			end
+			def next
+				@next
+			end
+			def +@
+				@current
+			end
+			def current?
+				!@currentIsEnd
+			end
+			def current
+				@current
+			end
+			def index
+				@cnt - 1
+			end
+			def initialize (m, args, fin = nil, &block)
+				if !m.is_a? Method
+					m = m.method(:each)
+				end
+				@method = m
+				@block = block
+				@args = args
+				@fin = fin
+				cc = nil
+				if callcc { |cc| true }
+					@back = cc
+					proceed
+				end
+				@back = nil
+			end
+			private
+			def callBlock
+				if @nxtCC != nil
+					@nxtCC.call false
+				else
+					if @block
+						@block.call self
+					elsif @back
+						@back.call false
+					end
+					@cc.call false
+				end
+			end
+			def proceed
+				@cnt = 0
+				@currentIsEnd = false
+				@method.call *@args do |arg|
+					if @cnt == 0
+						@currentIsEnd = false
+						@current = arg
+					else
+						@nextIsEnd = false
+						@next = arg
+						cc = nil
+						if callcc { |cc| true }
+							@cc = cc
+							callBlock
+						end
+						@current = @next
+						@next = nil
+					end
+					@cnt += 1
+				end
+				if @cnt == 0
+					@currentIsEnd = true
+					@nextIsEnd = true
+					@current = nil
+					@next = nil
+				else
+					@nextIsEnd = true
+					cc = nil
+					if callcc { |cc| true }
+						@cc = cc
+						callBlock
+					end
+				end
+				if @fin
+					@fin.call
+				end
+			end
+		end
+		def each__ (mName = :each)
+			m = self.method(mName)
+			Generator_.new m, [] do |g|
+				yield g
+			end
+		end
+		def Object.generateEach (m, *args)
+			Generator_.new m, args do |g|
+				yield g
+			end
+		end
+		def generator__ (mName = :each, &fin)
+			m = self.method(mName)
+			Generator_.new m, [], fin
+		end
+	end
+
+
+	def generateEach__ (m, *args)
+		Object.generateEach(m, *args) do |g|
+			yield g
+		end
+	end
+end
+
+
+class Object
+	class Gen__
+		def initialize obj
+			@enum = Enumerator.new do |y|
+				obj.each do |e|
+					y << e
+				end
+			end
+		end
+		def +@
+			@enum.peek
+		end
+		def inc
+			@enum.next
+			self
+		end
+		def current?
+			begin
+				@enum.peek
+				return true
+			rescue StopIteration
+				return false
+			end
+		end
+	end
+	def each__ &prc
+		g = Gen__.new self
+		begin
+			while g.current? do
+				prc.call g
+				g.inc
+			end
+		rescue StopIteration
+		end
+	end
+end
+
+#argv = []
+#subArgs = Hash.new
+#
+#
+#ARGV.each__ do |g|
+#	if (+g)[0..1] == "--"
+#		subArgNum = 0
+#		switch = +g
+#		case switch
+#		when "--with1SubArg"
+#			subArgNum = 2
+#		end
+#		subArgNum.times do
+#			(subArgs[switch] ||= Array.new).push +g.inc
+#		end
+#	else
+#		argv.push +g
+#	end
+#end
+#
+#
+#p argv
+#p subArgs
+#
+#exit 1
+
+require 'fileutils'
+
+
+def createRegexp (ag)
+    argv = []
+    expr = ag.dup
+    expr.chomp!
+    expr.sub!(/\s+$/, "")
+    expr.sub!(/\#.*/, "")
+    splitted = expr.split(/\s+/)
+    aexpr = splitted.join(" ")
+    splitted.each do |e|
+        argv.push(Regexp.escape(e))
+    end
+    return([aexpr, Regexp.new('^' + argv.join('\s+') + '\s*(|\#.*)$'), false, ag])
+end
+
+
+
+silent = false
+ARGV.each__ do |g|
+	case +g
+	when "-r"
+		revExec = true
+	when "--modify_pkg"
+		modify_pkg = true
+		revArgv.push +g
+	when "--nofile"
+		newArgv.push +g
+		g.inc
+		if +g =~ /^0[0-7][0-7][0-7]$/
+			fileMod = (+g).to_i(8)
+			newArgv.push +g
+			g.inc
+		end
+		content = +g
+		newArgv.push +g
+	when "--silent"
+		silent = true
+	when /^\-(\d+)$/
+		newArgv.push +g
+		lineNum = $1.to_i
+	when /^\-/
+		newArgv.push +g
+		revArgv.push +g
+	else
+		newArgv.push((+g) + ".rpmnew")
+		revArgv.push +g
+		target = +g
+		g.inc
+		while true
+			newArgv.push +g
+			revArgv.push +g
+			(+g).each_line do |ln|
+				if !ln.strip.empty?
+					regexpList.push(createRegexp(ln.rstrip))
+				end
+			end
+			g.inc
+		end
+	end
+end
+
+
+if target == nil || regexpList.size == 0
+	STDERR.write "error: too less arguments.\n"
+	exit 1
+end
+
+
+revExec && exec("/usr/bin/delline", *revArgv)
+
+
+if modify_pkg #create file if not exists
+    if !File.file?(target)
+        if !File.exists?(target)
+            if !File.writable?(File.dirname(target))
+                STDERR.write "error: '#{target}' is not writable.\n"
+                exit 1
+            else
+                File.open target, "w" do |fw|
+					fw.write "#{content}\n"
+                end
+				if fileMod != nil
+					FileUtils.chmod fileMod, target
+				end
+            end
+        elsif !File.writable?(target)
+            STDERR.write "error: '#{target}' is not writable.\n"
+            exit 1
+        end
+    end
+end
+
+
+if !File.writable?(target)
+	STDERR.write "error: '#{target}' is not writable.\n"
+	exit 1
+end
+
+
+File.open "#{target}.__new__", "w" do |fw|
+	lst = nil
+	lnum = 0
+	IO.foreach target do |ln|
+		regexpList.each do |e|
+			if !e[0].empty?
+				if ln =~ e[1]
+					STDERR.write "The line '#{e[0]}' already exists.\n" if !silent
+					e[2] = true
+					break
+				end
+			elsif ln.strip == e[3].strip
+				STDERR.write "The line '#{e[3].strip}' already exists.\n" if !silent
+				e[2] = true
+				break
+			end
+		end
+		lst = ln
+		lnum = lnum + 1
+	end
+#	if lst !~ /\n$/ && !(lnum < 1 && (lst == "" || lst == nil))
+#		fw.write "\n"
+#	end
+	lnum = 0
+	addlines = Proc.new do
+        regexpList.each do |e|
+            if !e[2]
+                fw.write "#{e[3].chomp}\n"
+            end
+        end
+	end
+	IO.foreach target do |ln|
+		if lineNum == lnum + 1
+			addlines.call
+		end
+		lnum = lnum + 1
+		fw.write ln
+	end
+	if lnum <= lineNum - 1
+		while lnum < lineNum - 1
+			fw.write "\n"
+			lnum += 1
+		end
+		addlines.call
+	end
+	if lineNum == 0
+		addlines.call
+	end
+end
+
+
+fs = File::Stat.new(target)
+system("mv -f '#{target}' '#{target}.bak'")
+system("mv '#{target}.__new__' '#{target}'")
+File.chmod fs.mode, target
+File.chown fs.uid, fs.gid, target
+
+
+if modify_pkg && File.file?("#{target}.rpmnew") && File.writable?("#{target}.rpmnew")
+    system "/usr/bin/ruby", $0, *newArgv
+end
+
+
+
