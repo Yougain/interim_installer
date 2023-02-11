@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo dnf -y ruby zsh make gcc ruby-devel git git-extras
+sudo dnf -y install ruby zsh make gcc ruby-devel git git-extras
 sudo gem install YkLib binding_of_caller
 git clone  https://github.com/Yougain/interim_installer.git
 sudo cp interim_installer/lsr /usr/bin
