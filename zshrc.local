@@ -223,6 +223,9 @@ resudo() {
 	fi
 }
 
+if [ ! -e "$HOME/.zshenv" ];then
+	touch $HOME/.zshenv
+fi
 addline --silent $HOME/.zshenv '
 #bindkey settings
 
