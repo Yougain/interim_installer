@@ -5,7 +5,7 @@ if [ -n "`which dnf`"];then
 else
 	CMD="yum"
 fi
-sudo dnf -y install ruby zsh make gcc ruby-devel git git-extras
+sudo $CMD -y install ruby zsh make gcc ruby-devel git git-extras
 sudo gem install YkLib binding_of_caller
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
