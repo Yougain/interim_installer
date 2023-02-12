@@ -15,7 +15,7 @@ git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_inst
 
 
 sudo cp $HOME/interim_installer/lsr /usr/bin
-sudo cp $HOME/interim_installer/rb_zsh /usr/bin
+sudo cp $HOME/interim_installer/zsh_rb /usr/bin
 sudo cp $HOME/interim_installer/addline /usr/bin
 
 sudo cp $HOME/interim_installer/zshrc.local /etc
