@@ -1,15 +1,16 @@
 #!/bin/env zsh
 
-if [ "$SHELL" = "/bin/zsh" ]; then
+if [ "$ZSH_NAME" = "zsh" ]; then
 
-FPATH="/usr/share/zsh/5.0.6/functions:$FPATH"
+FPATH="/usr/share/zsh/`zsh --version|awk '{print $2}'`/functions:$FPATH"
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 ## Completion configuration
 #
 fpath=(${HOME}/.zsh/functions/Completion ${fpath})
-autoload -U compinit
-compinit -u
+autoload -Uz compinit
+#compinit -u
+compinit
 
 
 
@@ -566,7 +567,11 @@ alias vi="vim"
 
 #PATH="/usr/local/bin:${PATH}"
 
-fnd(){ }
+
+fnd(){
+	echo -n > /dev/nil
+	# empty
+}
 
 
 def_ruby '
