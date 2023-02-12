@@ -1,5 +1,6 @@
 #!/bin/env zsh
 
+if [ "$SHELL" = "/bin/zsh" ]; then
 
 FPATH="/usr/share/zsh/5.0.6/functions:$FPATH"
 export LC_ALL="en_US.UTF-8"
@@ -644,3 +645,4 @@ stty stop undef
 
 export RUBYOPT='-W:no-experimental'
 
+fi

@@ -1,10 +1,14 @@
 #!/bin/bash
 
-if [ -n "`which dnf`"];then
+if [ -n "`which dnf`" ];then
 	CMD="dnf"
 else
 	CMD="yum"
 fi
+if [ -n "`which git`" ];then
+	sudo $CMD -y install git
+fi
+
 sudo $CMD -y install ruby zsh make gcc ruby-devel git git-extras
 sudo gem install YkLib binding_of_caller
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
