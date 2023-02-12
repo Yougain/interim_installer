@@ -30,4 +30,5 @@ function setup_home(){
 }
 
 setup_home /etc/skel /root /home/*
+sudo sed -i 's/bash/zsh/' /etc/passwd
 
