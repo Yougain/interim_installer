@@ -1,5 +1,23 @@
 #!/bin/bash
 
+if [ -n "$1" ];then
+	ssh -t $1 bash <<END
+if [ -d "./interim_installer" ]; then
+	git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
+else
+	git clone https://github.com/Yougain/interim_installer.git
+fi
+./interim_installer/${0##*/}
+END
+	exit $?
+fi
+
+if [ -z "`which zsh`" ];then
+	echo "zsh installed. exit."
+	exit 1
+fi
+
+
 if [ -n "`which dnf`" ];then
 	CMD="dnf"
 else
