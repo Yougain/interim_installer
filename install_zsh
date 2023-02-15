@@ -36,7 +36,7 @@ else
 fi
 if [ -n "`which git`" ];then
 	sudo $CMD -y install git
-ifi
+fi
 
 sudo $CMD -y install ruby zsh make gcc ruby-$DEV git git-extras
 sudo gem install YkLib binding_of_caller
