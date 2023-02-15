@@ -225,6 +225,21 @@ resudo() {
 	fi
 }
 
+su(){
+	if [ -z "$@" ]; then
+		local S=`cat /etc/shadow|egrep '^root'`
+		S=${S#*:}
+		S=${S%%:*}
+		if [ "S" = "*" ]; then
+			sudo $SHELL
+		else
+			/bin/su $@
+		fi
+	else
+		/bin/su $@
+	fi
+}
+
 if [ ! -e "$HOME/.zshenv" ];then
 	touch $HOME/.zshenv
 fi
