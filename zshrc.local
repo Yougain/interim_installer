@@ -274,7 +274,6 @@ setopt share_history        # share command history data
 
 def_ruby '
 	def hist_set_cd hx,home
-		print "\x1b[K"
 		d = nil
 		f = "#{home}/.zsh_history_pwd.d/#{hx}"
 		if File.exists? f
@@ -296,9 +295,7 @@ def_ruby '
 				end
 			end
 			print d
-			STDOUT.flush
 			print "\x1b[0m\x1b8"
-			STDOUT.flush
 			File.open "#{home}/.zsh_to_cd", "w" do |fw|
 				fw.write d
 			end
