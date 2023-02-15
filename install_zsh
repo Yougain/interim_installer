@@ -20,14 +20,25 @@ fi
 
 if [ -n "`which dnf`" ];then
 	CMD="dnf"
+	DEV="devel"
 else
-	CMD="yum"
+	if [ -n "`which yum`" ];then
+		CMD="yum"
+		DEV="devel"
+	else
+		if [ -n "`which apt-get`" ];then
+	        CMD="apt-get"
+			DEV="dev"
+		else
+			echo "Error: package installer not found."
+		fi
+	fi
 fi
 if [ -n "`which git`" ];then
 	sudo $CMD -y install git
-fi
+ifi
 
-sudo $CMD -y install ruby zsh make gcc ruby-devel git git-extras
+sudo $CMD -y install ruby zsh make gcc ruby-$DEV git git-extras
 sudo gem install YkLib binding_of_caller
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
