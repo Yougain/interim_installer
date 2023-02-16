@@ -12,21 +12,22 @@ END
 	exit $?
 fi
 
-if [ -z "`which zsh`" ];then
+
+if [ -f /bin/zsh ];then
 	echo "zsh installed. exit."
 	exit 1
 fi
 
 
-if [ -n "`which dnf`" ];then
+if [ -f /bin/dnf ];then
 	CMD="dnf"
 	DEV="devel"
 else
-	if [ -n "`which yum`" ];then
+	if [ -f /bin/yum ];then
 		CMD="yum"
 		DEV="devel"
 	else
-		if [ -n "`which apt-get`" ];then
+		if [ -f /bin/apt-get ];then
 	        CMD="apt-get"
 			DEV="dev"
 		else
@@ -34,11 +35,11 @@ else
 		fi
 	fi
 fi
-if [ -n "`which git`" ];then
+if [ ! -f /bin/git ];then
 	sudo $CMD -y install git
 fi
 
-sudo $CMD -y install ruby zsh make gcc ruby-$DEV git git-extras ncurses-$DEV
+sudo $CMD -y which install ruby zsh make gcc ruby-$DEV git git-extras ncurses-$DEV
 sudo gem install YkLib binding_of_caller curses
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
