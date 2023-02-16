@@ -327,12 +327,12 @@ def_ruby '
 '
 
 function history-beginning-search-backward-end-pwd(){
-	zle .history-search-backward
+	zle .history-beginning-search-backward
 	hist_set_cd $HISTNO $HOME
 }
 
 function history-beginning-search-forward-end-pwd(){
-	zle .history-search-forward
+	zle .history-beginning-search-forward
 	hist_set_cd $HISTNO $HOME
 }
 
