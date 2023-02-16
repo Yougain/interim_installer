@@ -1,14 +1,14 @@
 #!/bin/env zsh
 
-if [ -e /bin/apt-get ];then
+if [ -e /usr/bin/apt-get ];then
    export IST=apt-get
    export DVP=dev
 fi
-if [ -e /bin/yum ];then
+if [ -e /usr/bin/yum ];then
    export IST=yum
    export DVP=devel
 fi
-if [ -e /bin/dnf ];then
+if [ -e /usr/bin/dnf ];then
    export IST=dnf
    export DVP=devel
 fi
