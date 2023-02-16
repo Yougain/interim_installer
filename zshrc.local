@@ -1,17 +1,17 @@
 #!/bin/env zsh
 
-if [ -f /bin/apt-get ];then
+if [ -e /bin/apt-get ];then
    export IST=apt-get
    export DVP=dev
 fi
-if [ -f /bin/yum ];then
+if [ -e /bin/yum ];then
    export IST=yum
    export DVP=devel
 fi
-if [ -f /bin/dnf ];then
+if [ -e /bin/dnf ];then
    export IST=dnf
    export DVP=devel
-if
+fi
 
 if [ "$ZSH_NAME" = "zsh" ]; then
 
