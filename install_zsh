@@ -39,7 +39,7 @@ if [ ! -f /bin/git ];then
 	sudo $CMD -y install git
 fi
 
-sudo $CMD -y which install ruby zsh make gcc ruby-$DEV git git-extras ncurses-$DEV
+sudo $CMD -y install which ruby zsh make gcc ruby-$DEV git git-extras ncurses-$DEV
 sudo gem install YkLib binding_of_caller curses
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
