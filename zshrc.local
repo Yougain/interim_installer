@@ -1,5 +1,18 @@
 #!/bin/env zsh
 
+if [ -f /bin/apt-get ];then
+   export IST=apt-get
+   export DVP=dev
+fi
+if [ -f /bin/yum ];then
+   export IST=yum
+   export DVP=devel
+fi
+if [ -f /bin/dnf ];then
+   export IST=dnf
+   export DVP=devel
+if
+
 if [ "$ZSH_NAME" = "zsh" ]; then
 
 FPATH="/usr/share/zsh/`zsh --version|awk '{print $2}'`/functions:$FPATH"
@@ -525,6 +538,18 @@ rpm(){
 END
 }
 
+
+inst(){
+	sudo $IST -y install $@
+}
+
+
+upd(){
+	sudo $IST -y update $@
+}
+
+
+
 jp(){
 	if [ "$TTY" = "/dev/tty1" ];then
 		loadkeys jp106
@@ -665,5 +690,7 @@ export DISPLAY=localhost:0.0;
 stty stop undef
 
 export RUBYOPT='-W:no-experimental'
+
+
 
 fi

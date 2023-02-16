@@ -19,29 +19,30 @@ if [ -f /bin/zsh ];then
 fi
 
 
+APKG_R="redhat-rpm-config epel-release glibc-locale-source langpacks-en glibc-langpack-en"
 if [ -f /bin/dnf ];then
-	CMD="dnf"
-	DEV="devel"
-	$CMD install redhat-rpm-config epel-release
+	IST="dnf"
+	DVP="devel"
+	APKG="$APKG_R"
 else
 	if [ -f /bin/yum ];then
-		CMD="yum"
-		DEV="devel"
-		$CMD install redhat-rpm-config epel-release
+		IST="yum"
+		DVP="devel"
+		APKG="$APKG_R"
 	else
 		if [ -f /bin/apt-get ];then
-	        CMD="apt-get"
-			DEV="dev"
+	        IST="apt-get"
+			DVP="dev"
 		else
 			echo "Error: package installer not found."
 		fi
 	fi
 fi
 if [ ! -f /bin/git ];then
-	sudo $CMD -y install git
+	sudo $IST -y install git
 fi
 
-sudo $CMD -y install which ruby zsh make gcc ruby-$DEV git git-extras ncurses-$DEV
+sudo $IST -y install vim which ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
 sudo gem install YkLib binding_of_caller curses
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
