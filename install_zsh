@@ -38,12 +38,13 @@ if [ -n "`which git`" ];then
 	sudo $CMD -y install git
 fi
 
-sudo $CMD -y install ruby zsh make gcc ruby-$DEV git git-extras
-sudo gem install YkLib binding_of_caller
+sudo $CMD -y install ruby zsh make gcc ruby-$DEV git git-extras ncurses-$DEV
+sudo gem install YkLib binding_of_caller curses
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
 
 sudo cp $HOME/interim_installer/lsr /usr/bin
+sudo cp $HOME/interim_installer/lsp /usr/bin
 sudo cp $HOME/interim_installer/zsh_rb /usr/bin
 sudo cp $HOME/interim_installer/addline /usr/bin
 
