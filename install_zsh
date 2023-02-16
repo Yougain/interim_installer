@@ -22,10 +22,12 @@ fi
 if [ -f /bin/dnf ];then
 	CMD="dnf"
 	DEV="devel"
+	$CMD install redhat-rpm-config epel-release
 else
 	if [ -f /bin/yum ];then
 		CMD="yum"
 		DEV="devel"
+		$CMD install redhat-rpm-config epel-release
 	else
 		if [ -f /bin/apt-get ];then
 	        CMD="apt-get"
