@@ -65,4 +65,5 @@ function setup_home(){
 
 setup_home /etc/skel /root /home/*
 sudo sed -i 's/bash/zsh/' /etc/passwd
+sudo sed -i 's/SHELL=\/bin\/bash$/SHELL=\/bin\/zsh/' /etc/default/useradd
 
