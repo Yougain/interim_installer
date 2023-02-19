@@ -59,10 +59,21 @@ end
 fork do
 	begin
 		Process.daemon true
+        at_exit do
+          %W{r w}.each do |m|
+            "/tmp/#{$0.basename}.*.#{m}".glob.each do |f|
+              if f =~ /\.(\d+)\./
+                if !"/proc/#{$1}"._d?
+                  f.rm rescue nil
+                end
+              end
+            end
+          end
+        end
 
-		STDIN.reopen("/proc/#{zpid}/fd/0".readlink)
-		STDOUT.reopen("/proc/#{zpid}/fd/1".readlink, "w")
-		STDERR.reopen("/proc/#{zpid}/fd/2".readlink, "w")
+		STDIN.reopen("/proc/#{zpid}/fd/0".readlink) rescue nil
+		STDOUT.reopen("/proc/#{zpid}/fd/1".readlink, "w") rescue nil
+		STDERR.reopen("/proc/#{zpid}/fd/2".readlink, "w") rescue nil
 		Thread.abort_on_exception = true
 		Thread.new do
 			loop do
