@@ -53,6 +53,11 @@ sudo cp $HOME/interim_installer/zsh_rb /usr/bin
 sudo cp $HOME/interim_installer/addline /usr/bin
 
 sudo cp $HOME/interim_installer/zshrc.local /etc
+sudo sh -c "ZSH=/etc/oh-my-zsh $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh|sed 's/exec zsh -l//')" > /dev/null
+sudo cp $HOME/.zshrc /etc/zshrc.oh-my-zsh
+echo ". /etc/zshrc.oh-my-zsh" > $HOME/interim_installer/.zshrc.new
+cat $HOME/interim_installer/.zshrc >> $HOME/interim_installer/.zshrc.new
+mv -f $HOME/interim_installer/.zshrc{.new,}
 
 function setup_home(){
 	while (( "$#" )); do
@@ -62,6 +67,7 @@ function setup_home(){
 		shift
 	done;
 }
+
 
 setup_home /etc/skel /root /home/*
 sudo sed -i 's/bash/zsh/' /etc/passwd
