@@ -260,7 +260,9 @@ su(){
 if [ ! -e "$HOME/.zshenv" ];then
 	touch $HOME/.zshenv
 fi
-addline --silent $HOME/.zshenv '
+
+if [ ! -e "$HOME/.zsh_bindkey" ];then
+	echo '
 #bindkey settings
 
 bindkey "\e[H" beginning-of-line # Home gets to line head
@@ -290,7 +292,10 @@ bindkey "\\en" history-beginning-search-forward-end
 # reverse menu completion binded to Shift-Tab
 #
 bindkey "\e[Z" reverse-menu-complete
-'
+' > $HOME/.zsh_bindkey
+fi
+
+. $HOME/.zsh_bindkey
 
 autoload history-search-end
 zle -N history-beginning-search-backward-end history-search-end
