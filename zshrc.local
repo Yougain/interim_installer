@@ -278,7 +278,6 @@ bindkey "^[[5;2~" history-beginning-search-backward-end
 bindkey "^[[6;2~" history-beginning-search-forward-end
 bindkey "^[[1;2A" history-beginning-search-backward-end
 bindkey "^[[1;2B" history-beginning-search-forward-end
-#bindkey -s "^[s" "^[[A^[[H^[[1~sudo \n" #for sudo
 bindkey -s "^[s" "resudo\n" #for sudo
 bindkey -s "^[S" "resu\n" #for su
 

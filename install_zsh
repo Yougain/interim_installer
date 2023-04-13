@@ -2,6 +2,26 @@
 
 if [ -n "$1" ];then
 	ssh -t $1 bash <<END
+if [ -f /bin/dnf -o -f /usr/bin/dnf ];then
+	IST="dnf"
+else
+	if [ -f /bin/yum -o -f /usr/bin/yum ];then
+		IST="yum"
+	else
+		if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then
+	        IST="apt-get"
+		else
+			echo "Error: package installer not found."
+			exit 1
+		fi
+	fi
+fi
+if [ ! -f /bin/git -a ! -f /usr/bin/git ];then
+	sudo \$IST -y install git
+fi
+if [ ! -f /bin/which -a ! -F /usr/bin/which ];then
+    sudo \$IST -y install which
+fi
 if [ -d "./interim_installer" ]; then
 	git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 else
@@ -20,31 +40,37 @@ fi
 
 
 APKG_R="redhat-rpm-config epel-release glibc-locale-source langpacks-en glibc-langpack-en"
-if [ -f /bin/dnf ];then
+if [ -f /bin/dnf -o -f /usr/bin/dnf ];then
 	IST="dnf"
 	DVP="devel"
 	APKG="$APKG_R"
 else
-	if [ -f /bin/yum ];then
+	if [ -f /bin/yum -o -f /usr/bin/yum ];then
 		IST="yum"
 		DVP="devel"
 		APKG="$APKG_R"
 	else
-		if [ -f /bin/apt-get ];then
+		if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then
 	        IST="apt-get"
 			DVP="dev"
 		else
 			echo "Error: package installer not found."
+			exit 1
 		fi
 	fi
 fi
-if [ ! -f /bin/git ];then
+if [ ! -f /bin/git -a ! -f /usr/bin/git ];then
 	sudo $IST -y install git
 fi
 
-sudo $IST -y install vim which ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
+if [ ! -f /bin/which -a ! -F /usr/bin/which ];then
+    sudo $IST -y install which
+fi
+
+
+sudo $IST -y install vim ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
 sudo gem install YkLib binding_of_caller curses
-git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
+#git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
 
 sudo cp $HOME/interim_installer/lsr /usr/bin
@@ -53,9 +79,6 @@ sudo cp $HOME/interim_installer/zsh_rb /usr/bin
 sudo cp $HOME/interim_installer/addline /usr/bin
 
 sudo cp $HOME/interim_installer/zshrc.local /etc
-sudo sh -c "ZSH=/etc/oh-my-zsh $(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh|sed 's/exec zsh -l//')" > /dev/null
-sudo cp $HOME/.zshrc /etc/zshrc.oh-my-zsh
-echo ". /etc/zshrc.oh-my-zsh" > $HOME/interim_installer/.zshrc.new
 cat $HOME/interim_installer/.zshrc >> $HOME/interim_installer/.zshrc.new
 mv -f $HOME/interim_installer/.zshrc{.new,}
 
