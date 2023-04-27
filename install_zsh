@@ -57,9 +57,11 @@ mv -f $HOME/interim_installer/.zshrc{.new,}
 
 function setup_home(){
 	while (( "$#" )); do
-		sudo cp $HOME/interim_installer/.vimrc $1
-		sudo cp -r $HOME/interim_installer/.vim $1
-		sudo cp $HOME/interim_installer/.zshrc $1
+		if [ "$1" != "/home/*" ]; then
+			sudo cp $HOME/interim_installer/.vimrc $1
+			sudo cp -r $HOME/interim_installer/.vim $1
+			sudo cp $HOME/interim_installer/.zshrc $1
+		fi
 		shift
 	done;
 }
