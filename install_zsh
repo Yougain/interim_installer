@@ -42,7 +42,8 @@ fi
 
 
 sudo $IST -y install vim ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
-sudo gem install YkLib binding_of_caller curses
+sudo gem install binding_of_caller curses
+sudo gem install YkLib --no-ri --no-rdoc
 #git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
 
