@@ -7,8 +7,8 @@ fi
 
 
 TAG=`wget -q https://github.com/docker/buildx/releases/latest -O - | grep Welcome | head -1 | grep -o -e 'v[0-9][^ "]*' | head -1`
-mkdir -p $HOME/.docker/cli-plugins
-wget https://github.com/docker/buildx/releases/download/$TAG/buildx-$TAG.linux-amd64 -o $HOME/.docker/cli-plugins/docker-buildx
-chmod +x ~/.docker/cli-plugins/docker-buildx
+sudo mkdir -p /usr/lib/docker/cli-plugins
+sudo wget https://github.com/docker/buildx/releases/download/$TAG/buildx-$TAG.linux-amd64 -O /usr/lib/docker/cli-plugins/docker-buildx
+sudo chmod +x /usr/lib/docker/cli-plugins/docker-buildx
 docker buildx install
 
