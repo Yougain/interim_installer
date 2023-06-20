@@ -111,6 +111,7 @@ def_ruby '
 		mf = ENV["HOME"] + "/.zsh_d_size_max"
 		if File.exist? mf
 			print "\x1b7"
+			STDOUT.flush
 			system "tput cup 0 0"
 			system "tput hpa 999"
 			dsmax = IO.read(mf).to_i rescue 0
@@ -317,6 +318,7 @@ def_ruby '
 		end
 		if d
 			print "\x1b7"
+			STDOUT.flush
 			system "tput cup 0 0"
 			system "tput hpa 999"
 			mf = "#{home}/.zsh_d_size_max"
@@ -332,6 +334,7 @@ def_ruby '
 			end
 			print d
 			print "\x1b[0m\x1b8"
+			STDOUT.flush
 			File.open "#{home}/.zsh_to_cd", "w" do |fw|
 				fw.write d
 			end
