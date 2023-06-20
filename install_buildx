@@ -11,7 +11,7 @@ sudo mkdir -p /usr/lib/docker/cli-plugins
 sudo wget https://github.com/docker/buildx/releases/download/$TAG/buildx-$TAG.linux-amd64 -O /usr/lib/docker/cli-plugins/docker-buildx
 sudo chmod +x /usr/lib/docker/cli-plugins/docker-buildx
 docker buildx install
-git clone https://github.com/docker/buildx.git && cd buildx
+git-force-clone https://github.com/docker/buildx.git && cd buildx
 apt-get install -y make
 make install
 sudo mv -f $HOME/.docker/cli-plugins/docker-buildx /usr/lib/docker/cli-plugins/
