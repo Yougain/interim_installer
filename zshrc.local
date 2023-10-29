@@ -143,7 +143,7 @@ preexec() {
 	if [ "$ST_hist" != "1" ]; then
 		if [ -e $HOME/.zsh_to_cd ] && [ -d "`cat $HOME/.zsh_to_cd`" ];then
 			cd `cat $HOME/.zsh_to_cd`
-			rm $HOME/.zsh_to_cd
+			rm  -f $HOME/.zsh_to_cd
 		fi
 		mkdir -p ~/.zsh_history_pwd.d
 		echo $PPWD > ~/.zsh_history_pwd.d/`__cur_hist`
@@ -235,28 +235,74 @@ resu() {
 }
 resudo() {
 	if [ -e $HOME/.tmp/Yk/zsh/zsh.local/cmd.$$.$__shell_rnd__ ]; then
-		sudo `cat $HOME/.tmp/Yk/zsh/zsh.local/cmd.$$.$__shell_rnd__`
+		__sudo `cat $HOME/.tmp/Yk/zsh/zsh.local/cmd.$$.$__shell_rnd__`
 	fi
 }
 
+
+ruby <<'END'
+require 'pty'
+require 'etc'
+
+begin
+	userName = Etc.getpwuid(Process.uid).name
+rescue ArgumentError
+	exit 1
+end
+
+
+if [ "`id -u`" = 0 ];then
+	__sudo(){
+		$@
+	}
+else
+	ruby<<END
+		testStr = Random.rand(100000000).to_s
+		PTY.spawn "sudo echo #{testStr}" do |r, w, pid|
+			begin
+				response = r.readpartial 2048
+				case response
+				when /^\[sudo\] password for #{Regexp.escape userName}:/
+					Process.kill :INT, pid
+					exit 0
+				when /#{testStr}/
+					exit 0
+				else
+					print response.ln
+					exit 1
+				end
+			rescue EOFError
+				exit 1
+			end
+		end
+END
+	SUDO_ABLE=$?
+	if [ "$SUDO_ABLE" = "0" ];then
+		__sudo(){
+			/usr/bin/sudo $@
+		}
+	else
+		__sudo(){
+			local ARGS="$@"
+			ARGS=#{ARGS//'/'"'"'/}
+			/bin/su -c "'$ARGS'"
+		}
+	fi
+fi
+
+
 su(){
     if [ -z "$@" ]; then
-        if [ -z $(echo `sudo -n echo 2>&1` | grep "a password is required") ]; then
-            local S=`sudo cat /etc/shadow|egrep '^root'`
-            S=${S#*:}
-            S=${S%%:*}
-            if [ "$S" = "*" ]; then
-                sudo $SHELL
-            else
-                /bin/su $@
-            fi
+        if [ "$SUDO_ABLE" = "0" ]; then
+            __sudo $SHELL
         else
-            /bin/su $@
+        	su
         fi
     else
-        /bin/su $@
+        su $@
     fi
 }
+
 
 if [ ! -e "$HOME/.zshenv" ];then
 	touch $HOME/.zshenv
@@ -434,7 +480,7 @@ _sv(){
 }
 compdef _sv sv
 _lv(){
-	compadd `sudo journalctl -F '_SYSTEMD_UNIT' | ruby -e 'STDIN.each_line do |ln| if ln =~ /([^\s]+)\.service/; print $1 + "\n";end;end'`
+	compadd `__sudo journalctl -F '_SYSTEMD_UNIT' | ruby -e 'STDIN.each_line do |ln| if ln =~ /([^\s]+)\.service/; print $1 + "\n";end;end'`
 	compadd `getLVWList`
 }
 compdef _lv lv
@@ -504,19 +550,20 @@ _e3(){
 bindkey -r '^[[27;6;9~'
 compdef -k _e3 complete-word '^[[27;6;9~'
 
+
 sudo(){
 	if [ "$1" = "vi" ]; then
 		shift
-		/usr/bin/sudo vim $@
+		__sudo vim $@
 	else
-		/usr/bin/sudo $@
+		__sudo $@
 	fi
 }
 
 make(){
 	if [ "$1" = "install" ]; then
 		shift
-		/usr/bin/sudo make install $@
+		__sudo make install $@
 	else
 		/usr/bin/make $@
 	fi
@@ -525,18 +572,18 @@ make(){
 gem(){
 	if [ "$1" = "install" ]; then
 		shift
-		/usr/bin/sudo gem install $@
+		__sudo gem install $@
 	else
 		/usr/bin/gem $@
 	fi
 }
 
 rpm(){
-	ruby << END
+	ruby <<END
 	cmd = %w{$1}[0]
 	cmds = %w{$*}
 	if cmd[0] == ?- && cmd[1] != ?-
-		if cmd =~ /[iUe]/ && !cmds.find{|e| e =~ /^[^\-].*\.src\.rpm$/}
+		if ENV['SUDO_ABLE'] == "0" && Process.euid != 0 && cmd =~ /[iUe]/ && !cmds.find{|e| e =~ /^[^\-].*\.src\.rpm$/}
 			system *%w{/usr/bin/sudo /bin/rpm $*}
 		else
 			system *%w{/bin/rpm $*}
@@ -547,12 +594,12 @@ END
 
 
 inst(){
-	sudo $IST -y install $@
+	__sudo $IST -y install $@
 }
 
 
 upd(){
-	sudo $IST -y update $@
+	__sudo $IST -y update $@
 }
 
 
@@ -588,7 +635,7 @@ explorer(){
 }
 
 ping(){
-	sudo ping "$@"
+	__sudo ping "$@"
 }
 
 
