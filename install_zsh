@@ -32,6 +32,8 @@ else
 		fi
 	fi
 fi
+
+
 if [ ! -f /bin/git -a ! -f /usr/bin/git ];then
 	sudo $IST -y install git
 fi
@@ -39,6 +41,8 @@ fi
 if [ ! -f /bin/which -a ! -f /usr/bin/which ];then
     sudo $IST -y install which
 fi
+
+sudo $IST -y upgrade
 
 
 sudo $IST -y install vim ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
