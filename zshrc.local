@@ -248,6 +248,13 @@ if [ "`id -u`" = 0 ];then
 else
 	ruby<<END
 		require 'pty'
+		require 'etc'
+
+		begin
+			userName = Etc.getpwuid(Process.uid).name
+		rescue ArgumentError
+			exit 1
+		end
 
 		testStr = Random.rand(100000000).to_s
 		PTY.spawn "sudo echo #{testStr}" do |r, w, pid|
@@ -276,7 +283,7 @@ END
 	else
 		__sudo(){
 			local ARGS="$@"
-			ARGS=#{ARGS//'/'"'"'/}
+			ARGS=#{ARGS//\'/\'\"\'\"\'/}
 			/bin/su -c "'$ARGS'"
 		}
 	fi
