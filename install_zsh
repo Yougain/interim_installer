@@ -48,7 +48,7 @@ sudo $IST -y upgrade
 sudo $IST -y install vim ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
 sudo gem install binding_of_caller curses
 sudo gem install -N YkLib
-#git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
+git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
 
 sudo cp $HOME/interim_installer/lsr /usr/bin
@@ -57,6 +57,7 @@ sudo cp $HOME/interim_installer/zsh_rb /usr/bin
 sudo cp $HOME/interim_installer/addline /usr/bin
 
 sudo cp $HOME/interim_installer/zshrc.local /etc
+sudo cp $HOME/interim_installer/zprofile /etc
 cat $HOME/interim_installer/.zshrc >> $HOME/interim_installer/.zshrc.new
 mv -f $HOME/interim_installer/.zshrc{.new,}
 
