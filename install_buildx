@@ -13,7 +13,7 @@ sudo chmod +x /usr/lib/docker/cli-plugins/docker-buildx
 docker buildx install
 git-force-clone https://github.com/docker/buildx.git ~/buildx
 sudo apt-get install -y make
-cd buildx
+cd ~/buildx
 make install
 sudo mv -f $HOME/.docker/cli-plugins/docker-buildx /usr/lib/docker/cli-plugins/
 
