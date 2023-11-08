@@ -84,8 +84,8 @@ sudo sed -i 's/SHELL=\/bin\/bash$/SHELL=\/bin\/zsh/' /etc/default/useradd
 
 sudo bash -c "echo '
 for i in /etc/profile.d/*.sh ; do
-	if [ "$i" != "/etc/profile.d/bash_completion.sh" ]; then
-    	[ -r $i ] && source $i
+	if [ "\$i" != "/etc/profile.d/bash_completion.sh" ]; then
+    	[ -r \$i ] && source \$i
     fi
 done
 ' >> /etc/zsh/zprofile"
