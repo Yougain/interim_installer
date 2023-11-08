@@ -120,8 +120,10 @@ end
 DFiles = Hash.new{|h, k| h[k] = Set.new}
 
 "/dev".each_entry do |f|
-	s = f.stat
-	DFiles["#{s.rdev_major}:#{s.rdev_minor}"].add f
+	if f._e?
+		s = f.stat
+		DFiles["#{s.rdev_major}:#{s.rdev_minor}"].add f
+	end
 end
 
 
