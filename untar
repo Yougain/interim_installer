@@ -1,0 +1,269 @@
+#!/usr/bin/env ruby
+
+
+if ARGV.size == 0 || ARGV[0] == "--help" || ARGV[0] == "-?"
+        STDERR.write "usage: untar [archive name] [extraction directory]\n"
+        exit 1
+end
+
+XZ_HEAD = ["\xFD\x37\x7A\x58\x5A\x00", "xz --decompress --stdout"]
+BZ2_HEAD = ["BZh", "bunzip2 -c"]
+GZ_HEAD = ["\x1f\x8b\x08\x00", "gunzip -c"]
+Z_HEAD = ["\x1f\x9d", "uncompress -c"]
+Z2_HEAD = ["\x1f\xa0", "uncompress -c"]
+
+def detectUncompressCmd arg
+	File.open arg do |fr|
+		[GZ_HEAD, BZ2_HEAD, XZ_HEAD, Z_HEAD, Z2_HEAD].each do |h, c|
+			if fr.read(h.size) == h
+				return c
+			end
+			fr.pos = 0
+		end
+	end
+	return "cat"
+end
+
+force = FALSE
+lnk = FALSE
+argv = []
+ARGV.each do |a|
+	if a == "-f"
+		force = TRUE
+	elsif a == "-l"
+		lnk = TRUE
+	else
+		argv.push a
+	end
+end
+
+
+def processOne (arg, lnk, force)
+	system "#{$0} #{lnk ? '-l' : ''} #{force ? '-f' : ''} #{arg}"
+	return $?.to_i == 0
+end
+
+
+tdir = "."
+dName = ""
+if argv.size >= 2
+		hasDir = FALSE
+		argv.each do |item|
+			if item !~ /\.tar(|\.gz|\.bz2|\.Z|\.xz|\.lz)|\.t(z|az|gz|bz|bz2|b2|xz|lz)$/
+				hasDir = TRUE
+			end
+		end
+		if !hasDir
+			res = TRUE
+			argv.each do |item|
+				res &&= processOne item, lnk, force
+			end
+			exit(res ? 0 : 1)
+		end
+		if argv.size >= 3
+	        STDERR.write "usage: untar [archive name] [extraction directory]\n"			
+	        STDERR.write "       untar [archive name 1] [archive name 2] ...\n"			
+		end
+        tdir = argv[1]
+end
+
+
+
+if !File.exists? tdir
+        dName = File.basename tdir
+        tdir = File.dirname(tdir)
+end
+
+
+if !File.directory? tdir
+	STDERR.write "Error: file, '#{tdir}' already exists.\n"
+	exit 1
+end
+
+
+if !File.writable? tdir
+	STDERR.write "Error: no permission, cannot extract to '#{tdir}'"
+end
+
+
+
+arg = ""
+if File.file? argv[0]
+	arg = argv[0]
+elsif File.file? "#{argv[0]}.tar.gz"
+	arg = "#{argv[0]}.tar.gz"
+elsif File.file? "#{argv[0]}.tgz"
+	arg = "#{argv[0]}.tgz"
+elsif File.file? "#{argv[0]}.tar.Z"
+	arg = "#{argv[0]}.tar.Z"
+elsif File.file? "#{argv[0]}.taz"
+	arg = "#{argv[0]}.taz"
+elsif File.file? "#{argv[0]}.tz"
+	arg = "#{argv[0]}.tz"
+elsif File.file? "#{argv[0]}.tar.xz"
+	arg = "#{argv[0]}.tar.xz"
+elsif File.file? "#{argv[0]}.txz"
+	arg = "#{argv[0]}.txz"
+elsif File.file? "#{argv[0]}.tar.lz"
+	arg = "#{argv[0]}.tar.lz"
+elsif File.file? "#{argv[0]}.tlz"
+	arg = "#{argv[0]}.tlz"
+elsif File.file? "#{argv[0]}.tar.bz2"
+	arg = "#{argv[0]}.tar.bz2"
+elsif File.file? "#{argv[0]}.tbz2"
+	arg = "#{argv[0]}.tbz2"
+elsif File.file? "#{argv[0]}.tbz"
+	arg = "#{argv[0]}.tbz"
+elsif File.file? "#{argv[0]}.tb2"
+	arg = "#{argv[0]}.tb2"
+elsif File.file? "#{argv[0]}.tar"
+	arg = "#{argv[0]}.tar"
+else
+	STDERR.write "Error: archive '#{argv[0]}' not found\n"
+	exit 1
+end
+
+
+target = File.basename arg
+bdir = File.dirname arg
+f_target = File.expand_path "#{bdir}/#{target}"
+
+d = ""
+f = ""
+r = FALSE
+img = FALSE
+
+
+case target
+when /^(.*)(\.tar\.xz|\.txz)$/
+        d = $1
+        f = "J"
+when /^(.*)(\.tar\.lz|\.tlz)$/
+        d = $1
+        f = "L"
+when /^(.*)(\.tar\.gz|\.tgz)$/
+        d = $1
+        f = "z"
+when /^(.*)(\.tar\.Z|\.t(a|)z)$/
+        d = $1
+        f = "Z"
+when /^(.*)(\.tar\.bz2|\.t(bz2|bz|b2))$/
+        d = $1
+        f = "j"
+when /^(.*)\.tar$/
+        d = $1
+        f = ""
+when /^(.*)\.rpm$/
+		d = $1 
+		r = TRUE
+when /^(initrd.*)\.img$/
+		d = $1
+		img = TRUE
+else
+        d = target
+        target = target + ".tar.gz"
+        f = "z"
+end
+
+
+if dName != ""
+	d = dName
+end
+
+
+
+if File.exists? "#{tdir}/#{d}"
+	if !force
+		STDERR.write "Error: '#{tdir}/#{d}' already exists.\n"
+		exit 1
+	else
+		if File.expand_path("#{tdir}/#{d}") =~ /^\/[^\/]*$/
+			STDERR.write "Error: '#{tdir}/#{d}' is a primary directory\n"
+			exit 1
+		end
+		system "rm -f #{tdir}/#{d}"
+	end
+end
+system "mkdir #{tdir}/#{d}"
+if !r && !img
+	if f == "J"
+		if !File.executable?("/usr/bin/unxz")
+			STDERR.write "error: xz is not installed\n"
+			exit 1
+		else
+			system "cd #{tdir}/#{d};unxz -c #{f_target}|tar -vxf -"
+		end
+	elsif f == "L"
+		if !File.executable?("/usr/bin/lzip")
+			STDERR.write "error: lzip is not installed\n"
+			exit 1
+		else
+			system "cd #{tdir}/#{d};cat #{f_target}|lzip -d|tar -vxf -"
+		end
+	else
+		system "cd #{tdir}/#{d}; tar #{f}vxf #{f_target}"
+	end
+elsif r
+	system "cd #{tdir}/#{d}; rpm2cpio #{f_target} | cpio -id"
+elsif img
+	ucmd = detectUncompressCmd f_target
+	system "cd #{tdir}/#{d}; #{ucmd} #{f_target}| cpio -i --make-directories"
+end
+
+
+flg = FALSE
+other = FALSE
+mainDir = ""
+hasSame = FALSE
+lst = []
+Dir.foreach "#{tdir}/#{d}" do |fn|
+	if fn == "." || fn == ".."
+		next
+	end
+	if fn == d
+		hasSame = TRUE
+	end
+	if !flg
+		mainDir = fn
+		flg = TRUE
+		lst.push fn
+		next
+	end
+	lst.push fn
+	other = TRUE
+end
+
+tmp = rand.to_s
+
+if lnk
+	if !force
+		lst.each do |f|
+			if f != d
+				if File.exists? "#{tdir}/#{f}"
+					STDERR.write "#{tdir}/#{f} already exists."
+					system "rm -rf #{tdir}/#{d}"
+					exit 1
+				end
+			end
+		end
+	end
+	lst.each do |f|
+		if f != d
+			system "mv -f #{tdir}/#{d}/#{f} #{tdir}"
+		end
+	end
+	if hasSame
+		system "mv #{tdir}/#{d}/#{d} #{tdir}/#{d}.#{tmp}"
+		system "rmdir #{tdir}/#{d}; mv #{tdir}/#{d}.#{tmp} #{tdir}/#{d}"
+	elsif !other
+		system "rmdir #{tdir}/#{d}"
+		system "ln -s #{mainDir} #{tdir}/#{d}"
+	end
+elsif !other
+	system "mv #{tdir}/#{d} #{tdir}/#{d}.#{tmp}"
+	system "mv #{tdir}/#{d}.#{tmp}/#{mainDir} #{tdir}/#{d}"
+	system "rmdir #{tdir}/#{d}.#{tmp}"
+end
+
+
+exit 0

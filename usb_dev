@@ -1,0 +1,201 @@
+#!/usr/bin/env ruby
+
+require 'Yk/path_aux'
+#require 'tz/debug2'
+require 'set'
+
+name = ARGV[0]
+pth = nil
+
+class USBDevice
+	List = {}
+	attr_reader :path, :productId, :vendorId, :deviceFiles, :deviceNums, :usbDevNum, :busNum, :productName, :serialNumber, :manufacturer
+	def addDeviceNum n
+		@deviceNums.push n
+	end
+	def addDeviceFile f
+		@deviceFiles.push f
+	end
+	def get_prop f, n
+		(f / n)._?._r?.read.strip.__it
+	end
+	Sound = Struct.new "Sound", :number, :id
+	def initialize f, pth
+		@path = pth
+		if pth =~ /\-/
+			@busNum = $`
+		end
+		@usbDevNum = get_prop f, "devnum"
+		@vendorId = get_prop f, "idVendor"
+		@productId = get_prop f, "idProduct"
+		@productName = get_prop f, "product"
+		@serialNumber = get_prop f, "serial"
+		@manufacturer = get_prop f, "manufacturer"
+		@deviceNums = []
+		@deviceFiles = []
+        @videoDeviceFiles = Set.new
+        @sound = Hash.new{|h, k| h[k] = Sound.new}
+        @soundPaths = Set.new
+	end
+	def self.emerge f, pth
+		List[pth] = new f, pth
+	end
+    def addVideoDeviceFiles *files
+        files.each do |f|
+            @videoDeviceFiles.add f
+        end
+    end
+    def setSoundNumber n, nc
+        @sound[n].number = n
+    end
+    def setSoundId n, id
+        @sound[n].id = id
+	end
+    def video?
+        @videoDeviceFiles.size > 0
+    end
+    def sound?
+        @soundPaths.size > 0
+    end
+    SoundList = {}
+	if "/usr/bin/arecord"._x?
+	    lns = %W{arecord -l}.to_enum :read_each_line_p
+	else
+		lns = [].to_enum
+	end
+    begin
+        loop do
+            ln = lns.next
+            if ln =~ /^card (\d+)\: ([^\s]+).*, device (\d+):/
+                SoundList[[$1.to_i, $2]] = $3.to_i
+            end
+        end
+    rescue StopIteration
+    end
+    def setSoundPath
+        @sound.each_value do |s|
+            dNum = SoundList[[s.number, s.id]]
+            if dNum
+                @soundPaths.add [s.number, dNum]
+            end
+        end
+    end
+    def vdevices
+        @videoDeviceFiles.sort_by do |f|
+            tmp = f
+            a = []
+            while tmp =~ /\d+$/
+                a.push $`
+                a.push $&
+                tmp = $'
+            end
+            a.push tmp if tmp != ""
+            a
+        end
+    end
+    def sound_paths
+        @soundPaths.map{|item| item.join(",")}
+    end
+  	def self.each
+		List.values.sort_by{|e| e.path}.each do |e|
+			yield e
+		end
+	end
+	def self.searchByDeviceNum dn
+		found = Set.new
+		List.values.each do |d|
+			if d.deviceNums.index(dn)
+				found.add d
+			end
+		end
+		found.each do |d|
+			yield d
+		end
+	end
+	def self.[] arg
+		List[arg]
+	end
+end
+
+DFiles = Hash.new{|h, k| h[k] = Set.new}
+
+"/dev".each_entry do |f|
+	s = f.stat
+	DFiles["#{s.rdev_major}:#{s.rdev_minor}"].add f
+end
+
+
+"/sys/bus/usb/devices".each_entry do |f|
+	if f =~ /\/(\d+\-(\d+(\.\d+)*))$/
+		USBDevice.emerge f, $1
+	end
+end
+
+
+
+
+["/sys/dev/char", "/sys/dev/block"].each do |dir|
+	dir.each_entry do |f|
+		if f.readlink =~ /\/usb\d\/(\d+\-\d+(\.\d+)*)\//
+			d = USBDevice[$1]
+			if d
+				d.addDeviceNum(f.basename)
+			end
+		end
+	end
+end
+
+"/dev".each_entry do |f|
+	if f._e?
+		s = f.stat
+		USBDevice.searchByDeviceNum "#{s.rdev_major}:#{s.rdev_minor}" do |d|
+			d.addDeviceFile f
+		end
+	end
+end
+
+["/sys/devices/pci0000:00/*/usb*/*/*/video*", "/sys/devices/pci0000:00/*/usb*/*/*/sound*"].each do |dir|
+    Dir.glob dir do |e|
+        e.lrecursive do |f|
+            if f =~ /\/usb\d+\/(\d+\-\d+(\.\d+)*)\//
+                d = USBDevice[$1]
+                if d
+                    case f
+                    when /\/video4linux\/video\d+\/dev$/
+                        dnum = f.read.strip
+                        if d.deviceNums.index dnum
+                            dfiles = DFiles[dnum]
+                            if dfiles.size > 0
+                                d.addVideoDeviceFiles *dfiles
+                            end
+                        end
+                    when /\/sound\/card(\d+)\/number$/
+	                	d.setSoundNumber $1.to_i, f.read.to_i
+		            	d.setSoundId $1.to_i, (f.dirname / "id").read.strip
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+
+USBDevice.each do |d|
+    d.setSoundPath
+end
+
+
+
+USBDevice.each do |d|
+	if $0.basename != "usb_capture"
+		print "#{d.path} #{d.busNum}/#{d.usbDevNum} [#{d.deviceFiles.join(',')}] #{d.vendorId}:#{d.productId} #{d.productName || '(NULL)'}, #{d.manufacturer || '(NULL)'}, #{d.serialNumber || '(NULL)'}\n"
+	else
+		if d.video? || d.sound?
+    	    print "#{d.path} #{d.busNum}/#{d.usbDevNum} #{d.vdevices.join(";")} #{d.sound_paths.join(";")} #{d.vendorId}:#{d.productId} #{d.manufacturer}, #{d.productName}, #{d.serialNumber}\n"
+	    end
+	end
+end
+
+
+
