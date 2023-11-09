@@ -1,7 +1,57 @@
-#!/bin/sh
+#!/bin/bash
+
+
+
+ssh_inst(){
+	ssh -q -p 22 -o "PasswordAuthentication no" -o "StrictHostKeyChecking no" -o "UserKnownHostsFile /dev/null" -l rancher $@
+}
+
+
+install_ssh_key(){
+	KEY=`cat ~/.ssh/id_ed25519.pub 2>/dev/null`
+	if [ -z "$KEY" ];then
+		err Cannot find public key in ~/.ssh/id_ed25519.pub.
+	fi
+	local SET_KEY_CNT=0
+	while ! ssh_inst $1 echo; do
+		if [ "$SET_KEY_CNT" = "5" ]; then
+			return 1
+		fi
+		expect -c "
+		set timeout 1
+		spawn ssh -p 22 -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile /dev/null\" -l rancher $1
+		expect \"assword:\"
+		send \"rancher\n\"
+		expect \"rancher ~]$ \"
+		send \"mkdir ~/.ssh\n\"
+		expect \"rancher ~]$ \"
+		send \"chmod 700 ~/.ssh\n\"
+		expect \"rancher ~]$ \"
+		send \"echo $KEY >> ~/.ssh/authorized_keys\n\"
+		expect \"rancher ~]$ \"
+		send \"exit\"
+		"
+		sleep 1
+		SET_KEY_CNT=$(( SET_KEY_CNT + 1 ))
+	done
+	return 0
+}
+
+
 
 if [ -n "$1" ];then
-	ssh -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git-extras; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
+	if ! ssh $1 -o ConnectTimeout=3 -o ConnectionAttempts=3 echo -n; then
+		if ! ssh_inst $1 echo -n; then
+			if ! install_ssh_key $1; then
+				echo "Cannot logon as user, 'rancher' by password, 'rancher'.
+Please enter following commands on console.
+sudo passwd rancher
+rancher
+rancher"
+			fi
+		fi
+	fi
+	ssh_inst -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git-extras; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
 	exit $?
 fi
 
