@@ -1,21 +1,22 @@
 #!/bin/env ruby
 
 
-if ARGV.size == 0 || ARGV[0] == "--help" || ARGV[0] == "-?"
+if ARGV.size == 0 || ARGV.delete("--help") || ARGV.delete("-?")
         STDERR.write "usage: untar [archive name] [extraction directory]\n"
         exit 1
 end
 
-XZ_HEAD = ["\xFD\x37\x7A\x58\x5A\x00", "xz --decompress --stdout"]
-BZ2_HEAD = ["BZh", "bunzip2 -c"]
-GZ_HEAD = ["\x1f\x8b\x08\x00", "gunzip -c"]
-Z_HEAD = ["\x1f\x9d", "uncompress -c"]
-Z2_HEAD = ["\x1f\xa0", "uncompress -c"]
+XZ_HEAD = ["\xFD\x37\x7A\x58\x5A\x00".b, "xz --decompress --stdout"]
+BZ2_HEAD = ["BZh".b, "bunzip2 -c"]
+GZ_HEAD = ["\x1f\x8b\x08\x00".b, "gunzip -c"]
+Z_HEAD = ["\x1f\x9d".b, "uncompress -c"]
+Z2_HEAD = ["\x1f\xa0".b, "uncompress -c"]
 
 def detectUncompressCmd arg
-	File.open arg do |fr|
+	File.open arg, "rb" do |fr|
 		[GZ_HEAD, BZ2_HEAD, XZ_HEAD, Z_HEAD, Z2_HEAD].each do |h, c|
-			if fr.read(h.size) == h
+			rd = fr.read(h.bytesize)
+			if rd == h
 				return c
 			end
 			fr.pos = 0
@@ -184,7 +185,7 @@ if File.exists? "#{tdir}/#{d}"
 			STDERR.write "Error: '#{tdir}/#{d}' is a primary directory\n"
 			exit 1
 		end
-		system "rm -f #{tdir}/#{d}"
+		system "rm -rf #{tdir}/#{d}"
 	end
 end
 system "mkdir #{tdir}/#{d}"
@@ -210,6 +211,7 @@ elsif r
 	system "cd #{tdir}/#{d}; rpm2cpio #{f_target} | cpio -id"
 elsif img
 	ucmd = detectUncompressCmd f_target
+	#print "cd #{tdir}/#{d}; #{ucmd} #{f_target}| cpio -i --make-directories"
 	system "cd #{tdir}/#{d}; #{ucmd} #{f_target}| cpio -i --make-directories"
 end
 
