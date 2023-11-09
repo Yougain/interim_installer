@@ -1,5 +1,33 @@
-#!/usr/bin/env ruby
+#!/bin/env ruby
 
+
+if ARGV.size == 1
+	to_add = STDIN.read
+	rlines = to_add.lines.map do |ln|
+		ln.chomp!
+		ln.sub! /\s*#.*$/, ""
+		headSpace =  ln.sub!(/^\s+/, "") ? '[ \t]+' : ''
+		tmp_arr = ln.split /\s+/
+		tmp_arr.map!{Regexp.escape(_1)}
+		headSpace + tmp_arr.join('[ \t]+') + '[ \t]*(#.*|)'
+	end
+	reg = '^' + rlines.join('\n([ \t]*(#.*|)\n)*') + '$'
+	fName = ARGV[0]
+	org_content = IO.read fName rescue ""
+	if org_content !~ Regexp.new(reg)
+		require 'fileutils'
+		FileUtils.cp fName, fName + ".bak", preserve: true rescue nil
+		if org_content.empty?
+			new = to_add
+		else
+			new = org_content.chomp + "\n" + to_add
+		end
+		IO.write fName, new
+		exit 0
+	else
+		exit 1
+	end
+end
 
 modify_pkg = false
 lineNum = 0
