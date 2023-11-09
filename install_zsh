@@ -54,7 +54,7 @@ sudo cp -fa $HOME/interim_installer/usb_dev /usr/bin
 sudo cp -fa $HOME/interim_installer/untar /usr/bin
 sudo cp -fa $HOME/interim_installer/zshrc.local /etc
 
-function setup_home(){
+setup_home(){
 	while (( "$#" )); do
 		if [ "$1" != "/home/*" ]; then
 			sudo cp -fa $HOME/interim_installer/.vimrc $1
