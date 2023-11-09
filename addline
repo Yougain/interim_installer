@@ -1,4 +1,4 @@
-#!/bin/sh ruby
+#!/bin/env ruby
 
 
 if ARGV.size == 1
