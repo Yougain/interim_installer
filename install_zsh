@@ -122,6 +122,9 @@ setup_home /etc/skel /root /home/*
 sudo sed -i 's/bash/zsh/' /etc/passwd
 sudo sed -i 's/SHELL=\/bin\/bash$/SHELL=\/bin\/zsh/' /etc/default/useradd
 
+if [ ! -x '/bin/env' ]; then
+	sudo ln -sf /usr/bin/env /bin
+fi
 
 sudo addline /etc/zsh/zprofile <<END
 for i in /etc/profile.d/*.sh ; do
