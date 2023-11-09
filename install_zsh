@@ -41,8 +41,8 @@ sudo $IST -y upgrade
 
 
 sudo $IST -y install vim cpio man ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
-sudo gem install binding_of_caller curses
-sudo gem install -N YkLib
+sudo gem update binding_of_caller curses
+sudo gem update -N YkLib
 git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
 
 
@@ -56,6 +56,7 @@ sudo cp -fa $HOME/interim_installer/zshrc.local /etc
 
 setup_home(){
 	while (( "$#" )); do
+		echo $1
 		if [ "$1" != "/home/*" ]; then
 			sudo cp -fa $HOME/interim_installer/.vimrc $1
 			sudo cp -fra $HOME/interim_installer/.vim $1
