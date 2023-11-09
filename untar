@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/bin/env ruby
 
 
 if ARGV.size == 0 || ARGV[0] == "--help" || ARGV[0] == "-?"
@@ -156,7 +156,10 @@ when /^(.*)\.tar$/
 when /^(.*)\.rpm$/
 		d = $1 
 		r = TRUE
-when /^(initrd.*)\.img$/
+when /^(initrd\-.*)(\.img|)$/
+		d = $1
+		img = TRUE
+when /^(initramfs\-.*)(\.img|)$/
 		d = $1
 		img = TRUE
 else
