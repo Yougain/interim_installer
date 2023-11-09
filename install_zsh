@@ -82,11 +82,11 @@ sudo sed -i 's/bash/zsh/' /etc/passwd
 sudo sed -i 's/SHELL=\/bin\/bash$/SHELL=\/bin\/zsh/' /etc/default/useradd
 
 
-sudo bash -c "echo '
+sudo addline /etc/zsh/zprofile <<END
 for i in /etc/profile.d/*.sh ; do
 	if [ "\$i" != "/etc/profile.d/bash_completion.sh" ]; then
     	[ -r \$i ] && source \$i
     fi
 done
-' >> /etc/zsh/zprofile"
+END
 
