@@ -1,4 +1,4 @@
-#!/bin/sh ruby
+#!/bin/sh
 
 if [ -n "$1" ];then
 	ssh -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git-extras; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
