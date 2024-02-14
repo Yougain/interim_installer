@@ -8,6 +8,12 @@ debug="\033[42m\033[34mDEBUG     :\033[m \033[32m"
 plain="\033[m"
 normal="\033[m"
 
+function errmsg_n(){
+	echo -en $error"$@"$plain >&2
+}
+
+
+
 function errmsg(){
     errmsg_n "$@"
     if [ -n "$ERRMSG" ];then
