@@ -1,5 +1,125 @@
 #!/bin/env zsh
 
+
+error="\033[41m\033[33mERROR    :\033[m \033[31m"
+warning="\033[43m\033[31mWARNING:\033[m \033[33m"
+info="\033[46m\033[34mINFO     :\033[m \033[36m"
+debug="\033[42m\033[34mDEBUG     :\033[m \033[32m"
+plain="\033[m"
+normal="\033[m"
+
+function errmsg(){
+    errmsg_n "$@"
+    if [ -n "$ERRMSG" ];then
+        ERRMSG="$ERRMSG"'
+'"$@"
+    else
+        ERRMSG="$@"
+    fi
+    echo -ne "\n" >&2
+}
+
+
+err(){
+    errmsg "$@"
+}
+
+
+error(){
+    errmsg "$@"
+}
+
+
+_rm_all(){
+	if [ ! -e "$1" ];then
+		err "'$1' does not exist."
+		return 1
+	fi
+	local d
+	local dlen
+	local ln
+	local blockDevs
+	local f
+	local l
+	for f in /dev/block/*;do
+		l="`readlink -f $f`"
+		if [ "${l:0:5}" = "/dev/" ];then
+			blockDevs+=("${l#/dev/}")
+		fi
+	done
+	d=$(realpath $1)
+	if [ "$d" = "/" ];then
+		err "cannot use rm_all to '/'"
+		return 1
+	fi
+	dlen=${#d}
+	dlen=$((dlen + 1))
+	cat /proc/mounts|awk '{print $2}'| sort -r |while read ln;do
+		if [ "${ln:0:$dlen}" = "$d/" ];then
+			if ! umount $ln;then
+				err "cannot unmount '$ln'"
+				return 1
+			fi
+		fi
+	done
+	local lnLen1
+	local fsType
+	local b
+	local doRm
+	local dln
+	cat /proc/mounts|awk '{print $2 " " $1}'| sort -r |while read ln;do
+		dln="`echo $ln | awk '{print $1}'`"
+		lnLen1=$((${#dln} + 1))
+		if [ "${d:0:$lnLen1}" = "$dln/" -o "$d" = "$dln" ];then
+			fsType="`echo $ln | awk '{print $2}'`"
+			if [ "$fsType" = "overlay" ];then
+				doRm=1
+			else
+				if [ "${fsType:0:5}" = "/dev/" ];then
+					for b in ${blockDevs[@]}; do
+						if [ "$b" = "${fsType#/dev/}" ];then
+							doRm=1
+							break
+						fi
+					done
+				fi
+			fi
+			if [ -n "$doRm" ];then
+				/bin/rm --one-file-system -rf "$d"
+			else
+				err "cannot delete '$d'"
+				return 1
+			fi
+			break
+		fi
+	done
+}
+
+
+rm_all(){
+	if [ ! -d /dev/block ];then
+		err "directory, '/dev/block' is missing"
+		return 1
+	fi
+	if [ ! -r /proc/mounts ];then
+		err "cannot read /proc/mounts"
+		return 1
+	fi
+	local f
+	for f in $@;do
+		_rm_all "$f"
+	done
+}
+
+rm(){
+	if [ "$1" = "-rf" ];then
+		rm_all $@
+	else
+		/bin/rm $@
+	fi
+}
+
+
 if [ -e /usr/bin/apt-get ];then
    export IST=apt-get
    export DVP=dev
@@ -458,7 +578,7 @@ case "${UID}" in
 	mode_color="%{${fg[red]}%}"
 	bold_start="%B"
 	bold_end="%b"
-	alias rm='rm -i'
+	#alias rm='rm -i'
 	alias cp='cp -i'
 	alias mv='mv -i'
 	alias vi='vim'
@@ -751,3 +871,18 @@ export RUBYOPT='-W:no-experimental'
 
 
 fi
+
+enable_bracketed_mode () {
+        printf "\e[?2004h"
+}
+
+disable_bracketed_mode () {
+        printf "\e[?2004l"
+}
+
+key(){
+    showkey -a
+}
+
+
+

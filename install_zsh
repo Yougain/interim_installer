@@ -89,7 +89,11 @@ if [ ! -f /bin/which -a ! -f /usr/bin/which ];then
 fi
 
 sudo $IST -y update
-sudo $IST -y upgrade
+if [ "$IST" = "apt-get" ];
+	sudo DEBIAN_FRONTEND=noninteractive $IST -y upgrade -yq
+else
+	sudo $IST -y upgrade
+fi
 
 
 sudo $IST -y install vim cpio man ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
