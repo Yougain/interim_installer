@@ -119,6 +119,7 @@ rm_all(){
 
 rm(){
 	if [ "$1" = "-rf" ];then
+		shift
 		rm_all $@
 	else
 		/bin/rm $@
