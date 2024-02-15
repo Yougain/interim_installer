@@ -53,7 +53,7 @@ _rm_all(){
 			blockDevs+=("${l#/dev/}")
 		fi
 	done
-	d=$(realpath $1)
+	d=$($__sudo__ realpath $1)
 	if [ "$d" = "/" ];then
 		err "cannot use rm_all to '/'"
 		return 1
