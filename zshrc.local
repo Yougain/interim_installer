@@ -62,7 +62,7 @@ _rm_all(){
 	dlen=$((dlen + 1))
 	cat /proc/mounts|awk '{print $2}'| sort -r |while read ln;do
 		if [ "${ln:0:$dlen}" = "$d/" ];then
-			if ! umount $ln;then
+			if ! $__sudo__ umount $ln;then
 				err "cannot unmount '$ln'"
 				return 1
 			fi
@@ -91,7 +91,7 @@ _rm_all(){
 				fi
 			fi
 			if [ -n "$doRm" ];then
-				/bin/rm --one-file-system -rf "$d"
+				$__sudo__ /bin/rm --one-file-system -rf "$d"
 			else
 				err "cannot delete '$d'"
 				return 1
@@ -122,7 +122,17 @@ rm(){
 		shift
 		rm_all $@
 	else
-		/bin/rm $@
+		$__sudo__ /bin/rm $@
+	fi
+}
+
+sudo(){
+	local __sudo__=sudo
+	if [ "$1" == "rm" ];then
+		shift
+		rm $@
+	else
+		/sbin/sudo $@
 	fi
 }
 
