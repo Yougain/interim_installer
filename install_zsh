@@ -89,7 +89,7 @@ if [ ! -f /bin/which -a ! -f /usr/bin/which ];then
 fi
 
 sudo $IST -y update
-if [ "$IST" = "apt-get" ];
+if [ "$IST" = "apt-get" ];then
 	sudo DEBIAN_FRONTEND=noninteractive $IST -y upgrade -yq
 else
 	sudo $IST -y upgrade
