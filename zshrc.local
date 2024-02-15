@@ -126,14 +126,23 @@ rm(){
 	fi
 }
 
+
 sudo(){
 	local __sudo__=sudo
-	if [ "$1" == "rm" ];then
-		shift
-		rm $@
-	else
-		/sbin/sudo $@
-	fi
+	case "$1" in
+		vi)
+			shift
+			__sudo vim $@
+			;;
+		rm)
+			__sudo__=/usr/bin/sudo
+			shift
+			rm $@
+			;;
+		*)
+			__sudo $@
+			;;
+	esac
 }
 
 
@@ -690,15 +699,6 @@ _e3(){
 bindkey -r '^[[27;6;9~'
 compdef -k _e3 complete-word '^[[27;6;9~'
 
-
-sudo(){
-	if [ "$1" = "vi" ]; then
-		shift
-		__sudo vim $@
-	else
-		__sudo $@
-	fi
-}
 
 make(){
 	if [ "$1" = "install" ]; then
