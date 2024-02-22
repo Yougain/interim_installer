@@ -1,6 +1,11 @@
 #!/bin/env zsh
 
 
+if [ -x /usr/bin/go ];then
+	export GOPATH=$(go env GOPATH)
+	export PATH=$PATH:$GOPATH/bin
+fi
+
 error="\033[41m\033[33mERROR    :\033[m \033[31m"
 warning="\033[43m\033[31mWARNING:\033[m \033[33m"
 info="\033[46m\033[34mINFO     :\033[m \033[36m"
