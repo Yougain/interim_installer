@@ -65,7 +65,7 @@ _rm_all(){
 	fi
 	dlen=${#d}
 	dlen=$((dlen + 1))
-	cat /proc/mounts|awk '{print $2}'| sort -r |while read ln;do
+	cat /proc/mounts|awk '{print $2}'| sed -n '1!G;h;$p' |while read ln;do
 		if [ "${ln:0:$dlen}" = "$d/" ];then
 			if ! $__sudo__ umount $VERBOSE_OPT $ln;then
 				err "cannot unmount '$ln'"
@@ -78,10 +78,10 @@ _rm_all(){
 	local b
 	local doRm
 	local dln
-	cat /proc/mounts|awk '{print $2 " " $1}'| sort -r |while read ln;do
+	cat /proc/mounts|awk '{print $2 " " $1}'| sed -n '1!G;h;$p' |while read ln;do
 		dln="`echo $ln | awk '{print $1}'`"
 		lnLen1=$((${#dln} + 1))
-		if [ "${d:0:$lnLen1}" = "$dln/" -o "$d" = "$dln" ];then
+		if [ "${d:0:$lnLen1}" = "$dln/" -o "$d" = "$dln" -o "$dln" = "/" ];then
 			fsType="`echo $ln | awk '{print $2}'`"
 			if [ "$fsType" = "overlay" ];then
 				doRm=1
@@ -358,6 +358,23 @@ setopt noautoremoveslash
 #
 setopt nolistbeep
 
+enable_bracketed_mode() {
+    printf "\e[?2004h"
+}
+
+disable_bracketed_mode() {
+    printf "\e[?2004l"
+}
+zle -N enable_bracketed_mode
+zle -N disable_bracketed_mode
+
+echo_n(){
+	echo -n $@
+}
+
+zle -N none echo_n
+
+
 ## Keybind configuration
 #
 # emacs like keybind (e.x. Ctrl-a gets to line head and Ctrl-e gets
@@ -366,6 +383,8 @@ setopt nolistbeep
 bindkey -e
 case "${TERM}" in
 xterm*)
+	bindkey "\e[200~" disable_bracketed_mode
+	bindkey "\e[201~" none
 	bindkey "\e[H" beginning-of-line # Home gets to line head
 	bindkey "\e[F" end-of-line # End gets to line end
 	bindkey "^[[1~" beginning-of-line # Home gets to line head

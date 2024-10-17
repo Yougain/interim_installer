@@ -38,7 +38,6 @@ install_ssh_key(){
 }
 
 
-
 if [ -n "$1" ];then
 	if ! ssh $1 -o ConnectTimeout=3 -o ConnectionAttempts=3 echo -n; then
 		if ! ssh_inst $1 echo -n; then
@@ -99,24 +98,37 @@ fi
 sudo $IST -y install vim cpio man ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
 sudo gem install binding_of_caller curses
 sudo gem install -N YkLib
-git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer
+GPRJ=~/git_project
+GPAGE=https://github.com/Yougain
+
+Git-Force-Clone-Inst(){
+	while (( $# )); do
+		git-force-clone $GPAGE/$1.git $GPRJ/$1
+		if [ -x $GPRJ/$1/install ];then
+			( cd $GPRJ/$1; ./install )
+		fi
+		shift
+	done
+}
+
+Git-Force-Clone-Inst g bashlib_y
 
 
-sudo cp -fa $HOME/interim_installer/lsr /usr/bin
-sudo cp -fa $HOME/interim_installer/lsp /usr/bin
-sudo cp -fa $HOME/interim_installer/zsh_rb /usr/bin
-sudo cp -fa $HOME/interim_installer/addline /usr/bin
-sudo cp -fa $HOME/interim_installer/usb_dev /usr/bin
-sudo cp -fa $HOME/interim_installer/untar /usr/bin
-sudo cp -fa $HOME/interim_installer/zshrc.local /etc
+sudo ln -sf $GPRJ/interim_installer/lsr /usr/bin
+sudo ln -sf $GPRJ/interim_installer/lsp /usr/bin
+sudo ln -sf $GPRJ/interim_installer/zsh_rb /usr/bin
+sudo ln -sf $GPRJ/interim_installer/addline /usr/bin
+sudo ln -sf $GPRJ/interim_installer/usb_dev /usr/bin
+sudo ln -sf $GPRJ/interim_installer/untar /usr/bin
+sudo ln -sf $GPRJ/interim_installer/zshrc.local /etc
 
 setup_home(){
 	while [ "$#" != 0 ]; do
 		echo $1
 		if [ "$1" != "/home/*" ]; then
-			sudo cp -fa $HOME/interim_installer/.vimrc $1
-			sudo cp -fra $HOME/interim_installer/.vim $1
-			sudo cp -fa $HOME/interim_installer/.zshrc $1
+			sudo cp -fa $GPRJ/interim_installer/.vimrc $1
+			sudo cp -fra $GPRJ/interim_installer/.vim $1
+			sudo cp -fa $GPRJ/interim_installer/.zshrc $1
 		fi
 		shift
 	done;
