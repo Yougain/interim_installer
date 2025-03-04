@@ -144,6 +144,9 @@ if [ ! -x '/bin/env' ]; then
 	sudo ln -sf /usr/bin/env /bin
 fi
 
+if [ ! -e '/etc/zsh/zprofile' ];then
+	sudo touch /etc/zsh/zprofile
+fi
 sudo addline /etc/zsh/zprofile <<END
 for i in /etc/profile.d/*.sh ; do
 	if [ "\$i" != "/etc/profile.d/bash_completion.sh" ]; then
