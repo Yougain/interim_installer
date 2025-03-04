@@ -144,6 +144,10 @@ if [ ! -x '/bin/env' ]; then
 	sudo ln -sf /usr/bin/env /bin
 fi
 
+
+if [ ! -d '/etc/zsh' ];then
+	sudo mkdir /etc/zsh
+fi
 if [ ! -e '/etc/zsh/zprofile' ];then
 	sudo touch /etc/zsh/zprofile
 fi
