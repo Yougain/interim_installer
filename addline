@@ -22,6 +22,9 @@ if ARGV.size == 1
 		else
 			new = org_content.chomp + "\n" + to_add
 		end
+		if !File.exist?(fName)
+			FileUtils.touch fName
+		end
 		IO.write fName, new
 		exit 0
 	else
