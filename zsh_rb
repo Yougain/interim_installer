@@ -11,7 +11,7 @@ ENV.each do |k, v|
 end
 
 def checkZ zpid
-	if File.exists?(pf = "/proc/#{zpid}/exe")
+	if File.exist?(pf = "/proc/#{zpid}/exe")
 		l = File.readlink(pf)
 		if !l || File.basename(l) != "zsh"
 			exit 3
