@@ -251,7 +251,7 @@ def_ruby '
 		["cmd", "idle", "cmd-before"].each do |e|
 			"$HOME/.tmp/Yk/zsh/zsh.local/#{e}.*".glob.each do |f|
 				if f =~ /#{Regexp.escape e}.(\d+)/
-					if !"/proc/#{tmp.to_i}".exists?
+					if !"/proc/#{tmp.to_i}".exist?
 						f.unlink
 					end
 				end
@@ -536,7 +536,7 @@ def_ruby '
 	def hist_set_cd hx,home
 		d = nil
 		f = "#{home}/.zsh_history_pwd.d/#{hx}"
-		if File.exists? f
+		if File.exist? f
 			d = IO.read(f).lines[-1].strip
 		end
 		if d
