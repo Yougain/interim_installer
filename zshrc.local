@@ -929,5 +929,30 @@ key(){
     showkey -a
 }
 
+c(){
+	if type code 2>/dev/null;then
+		code $@
+	else
+		vi $@
+	fi
+}
+
+cb(){
+	if [ ! -e $1 ];then
+		echo "#/bin/bash" > $1
+	fi
+	c $@
+}
+
+cr(){
+	if [ ! -e $1 ];then
+		if [ ! -e /bin/env ];then
+			sudo ln -sf /usr/bin/env /bin/env
+		fi
+		echo "#/bin/env ruby" > $1
+	fi
+	c $@
+}
+
 
 
