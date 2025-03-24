@@ -939,7 +939,8 @@ c(){
 
 cb(){
 	if [ ! -e $1 ];then
-		echo "#/bin/bash" > $1
+		echo '#!/bin/bash' > $1
+		chmod +x $1
 	fi
 	c $@
 }
@@ -949,7 +950,8 @@ cr(){
 		if [ ! -e /bin/env ];then
 			sudo ln -sf /usr/bin/env /bin/env
 		fi
-		echo "#/bin/env ruby" > $1
+		echo '#!/bin/env ruby' > $1
+		chmod +x $1
 	fi
 	c $@
 }
