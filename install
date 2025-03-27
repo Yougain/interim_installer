@@ -49,9 +49,9 @@ rancher
 rancher"
 			fi
 		fi
-		ssh_inst -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git-extras; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
+		ssh_inst -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
 	else
-		ssh -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git-extras; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
+		ssh -t $1 'if [ -f /bin/dnf -o -f /usr/bin/dnf ];then IST="dnf"; else if [ -f /bin/yum -o -f /usr/bin/yum ];then IST="yum"; else if [ -f /usr/apt-get -o -f /usr/bin/apt-get ];then IST="apt-get"; else echo "Error: package installer not found."; exit 1; fi; fi; fi; if [ ! -f /bin/git ];then sudo $IST -y update; sudo $IST -y install git git; fi; if [ ! -f /bin/which -a ! -f /usr/bin/which ];then sudo \$IST -y install which; fi; if [ -d "./interim_installer" ]; then git-force-clone  https://github.com/Yougain/interim_installer.git ~/interim_installer; else git clone https://github.com/Yougain/interim_installer.git; fi; ./interim_installer/'${0##*/}'; exit $?'
 	fi
 	exit $?
 fi
@@ -95,7 +95,15 @@ else
 fi
 
 
-sudo $IST -y install vim cpio man ruby zsh make gcc ruby-$DVP git git-extras ncurses-$DVP $APKG
+sudo $IST -y install vim cpio man ruby zsh make gcc ruby-$DVP git ncurses-$DVP $APKG
+if ! sudo $IST -y install git-extras;then
+	if [ "$IST" = "dnf" -o "$IST" = "yum" ];then
+		sudo rpm -ivh https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/Packages/g/git-extras-7.3.0-1.el9.noarch.rpm
+	else
+		die "cannot install git-extras."
+	fi
+fi
+
 sudo gem install binding_of_caller curses
 sudo gem install -N YkLib
 GPRJ=~/git_project

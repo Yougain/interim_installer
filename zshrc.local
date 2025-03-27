@@ -52,12 +52,14 @@ _rm_all(){
 	local blockDevs
 	local f
 	local l
-	for f in /dev/block/*;do
-		l="`readlink -f $f`"
-		if [ "${l:0:5}" = "/dev/" ];then
-			blockDevs+=("${l#/dev/}")
-		fi
-	done
+	if [ -n "`ls -A /dev/block`" ];then
+		for f in /dev/block/*;do
+			l="`readlink -f $f`"
+			if [ "${l:0:5}" = "/dev/" ];then
+				blockDevs+=("${l#/dev/}")
+			fi
+		done 2> /dev/null
+	fi
 	d=$($__sudo__ realpath $1)
 	if [ "$d" = "/" ];then
 		err "cannot use rm_all to '/'"
@@ -93,6 +95,13 @@ _rm_all(){
 							break
 						fi
 					done
+					if [ -n "$WSL_INTEROP" ]; then
+						if [ "${fsType:0:7}" = "/dev/sd" ];then
+							doRm=1
+						fi
+					fi
+				elif [ -n "$WSL_INTEROP" ] && [[ ${fsType:0:2} =~ [A-Z]: ]];then
+					doRm=1
 				fi
 			fi
 			if [ -n "$doRm" ];then
@@ -956,5 +965,19 @@ cr(){
 	c $@
 }
 
+g(){
+	if [ -e /usr/bin/g ];then
+		/usr/bin/g "$@"
+		local ret=$?
+		if [ -e ~/.g.cd ];then
+			cd `cat ~/.g.cd`
+			rm -f ~/.g.cd
+		fi
+		return $ret
+	else
+		err "'/usr/bin/g' is not installed."
+		return 1
+	fi
+}
 
-
+echo -e "\e[?12h"
